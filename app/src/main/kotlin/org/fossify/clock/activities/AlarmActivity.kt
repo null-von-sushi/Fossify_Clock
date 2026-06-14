@@ -71,7 +71,6 @@ class AlarmActivity : SimpleActivity() {
         if (alarm?.challengeType != CHALLENGE_NONE) {
             binding.reminderSnooze.beGone()
             binding.snoozeLabel.beGone()
-            binding.reminderDraggableBackground.beGone()
             binding.reminderGuide.text = getString(R.string.swipe_to_dismiss)
         }
         EventBus.getDefault().register(this)
@@ -104,9 +103,7 @@ class AlarmActivity : SimpleActivity() {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     dragDownX = event.x
-                    if (!hasChallenge) {
-                        binding.reminderDraggableBackground.animate().alpha(0f)
-                    }
+                    binding.reminderDraggableBackground.animate().alpha(0f)
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -149,11 +146,9 @@ class AlarmActivity : SimpleActivity() {
 
     private fun resetDraggable(initialDraggableX: Float) {
         binding.reminderDraggable.animate().x(initialDraggableX).withEndAction {
-            if (alarm?.challengeType == CHALLENGE_NONE) {
-                binding.reminderDraggableBackground
-                    .animate()
-                    .alpha(REMINDER_DRAGGABLE_BACKGROUND_ALPHA)
-            }
+            binding.reminderDraggableBackground
+                .animate()
+                .alpha(REMINDER_DRAGGABLE_BACKGROUND_ALPHA)
         }
     }
 
