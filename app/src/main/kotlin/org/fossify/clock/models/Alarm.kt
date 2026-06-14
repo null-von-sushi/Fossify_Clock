@@ -1,6 +1,7 @@
 package org.fossify.clock.models
 
 import androidx.annotation.Keep
+import org.fossify.clock.helpers.CHALLENGE_NONE
 import org.fossify.clock.helpers.TODAY_BIT
 import org.fossify.clock.helpers.TOMORROW_BIT
 
@@ -17,6 +18,8 @@ data class Alarm(
     var label: String,
     var oneShot: Boolean = false,
     var specificTimeZone: String = "",
+    var challengeType: Int = CHALLENGE_NONE,
+    var challengePassword: String = "",
 ) {
     fun isRecurring() = days > 0
 
@@ -36,6 +39,9 @@ data class ObfuscatedAlarm(
     var g: String,
     var h: String,
     var i: Boolean = false,
+    var j: String = "",
+    var k: Int = CHALLENGE_NONE,
+    var l: String = "",
 ) {
-    fun toAlarm() = Alarm(a, b, c, d, e, f, g, h, i)
+    fun toAlarm() = Alarm(a, b, c, d, e, f, g, h, i, j, k, l)
 }

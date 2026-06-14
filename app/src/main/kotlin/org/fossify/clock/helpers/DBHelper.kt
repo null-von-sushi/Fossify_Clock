@@ -35,11 +35,13 @@ class DBHelper private constructor(
     private val COL_LABEL = "label"
     private val COL_ONE_SHOT = "one_shot"
     private val COL_SPECIFIC_TIMEZONE = "specific_timezone"
+    private val COL_CHALLENGE_TYPE = "challenge_type"
+    private val COL_CHALLENGE_PASSWORD = "challenge_password"
 
     private val mDb = writableDatabase
 
     companion object {
-        private const val DB_VERSION = 3
+        private const val DB_VERSION = 4
         const val DB_NAME = "alarms.db"
 
         @SuppressLint("StaticFieldLeak")
@@ -57,7 +59,8 @@ class DBHelper private constructor(
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             "CREATE TABLE IF NOT EXISTS $ALARMS_TABLE_NAME ($COL_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COL_TIME_IN_MINUTES INTEGER, $COL_DAYS INTEGER, " +
-                "$COL_IS_ENABLED INTEGER, $COL_VIBRATE INTEGER, $COL_SOUND_TITLE TEXT, $COL_SOUND_URI TEXT, $COL_LABEL TEXT, $COL_ONE_SHOT INTEGER, $COL_SPECIFIC_TIMEZONE TEXT)"
+                "$COL_IS_ENABLED INTEGER, $COL_VIBRATE INTEGER, $COL_SOUND_TITLE TEXT, $COL_SOUND_URI TEXT, $COL_LABEL TEXT, $COL_ONE_SHOT INTEGER, $COL_SPECIFIC_TIMEZONE TEXT, " +
+                "$COL_CHALLENGE_TYPE INTEGER, $COL_CHALLENGE_PASSWORD TEXT)"
         )
         insertInitialAlarms(db)
     }
@@ -67,8 +70,13 @@ class DBHelper private constructor(
             db.execSQL("ALTER TABLE $ALARMS_TABLE_NAME ADD COLUMN $COL_ONE_SHOT INTEGER NOT NULL DEFAULT 0")
         }
 
-        if (oldVersion <= 2 && newVersion >= 3) {
+        if (oldVersion <= 2) {
             db.execSQL("ALTER TABLE $ALARMS_TABLE_NAME ADD COLUMN $COL_SPECIFIC_TIMEZONE TEXT NOT NULL DEFAULT ''")
+        }
+
+        if (oldVersion <= 3) {
+            db.execSQL("ALTER TABLE $ALARMS_TABLE_NAME ADD COLUMN $COL_CHALLENGE_TYPE INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE $ALARMS_TABLE_NAME ADD COLUMN $COL_CHALLENGE_PASSWORD TEXT NOT NULL DEFAULT ''")
         }
     }
 
@@ -127,6 +135,8 @@ class DBHelper private constructor(
             put(COL_LABEL, alarm.label)
             put(COL_ONE_SHOT, alarm.oneShot)
             put(COL_SPECIFIC_TIMEZONE, alarm.specificTimeZone)
+            put(COL_CHALLENGE_TYPE, alarm.challengeType)
+            put(COL_CHALLENGE_PASSWORD, alarm.challengePassword)
         }
     }
 
@@ -144,7 +154,9 @@ class DBHelper private constructor(
             COL_SOUND_URI,
             COL_LABEL,
             COL_ONE_SHOT,
-            COL_SPECIFIC_TIMEZONE
+            COL_SPECIFIC_TIMEZONE,
+            COL_CHALLENGE_TYPE,
+            COL_CHALLENGE_PASSWORD
         )
         var cursor: Cursor? = null
         try {
@@ -162,6 +174,8 @@ class DBHelper private constructor(
                         val label = cursor.getStringValue(COL_LABEL)
                         val oneShot = cursor.getIntValue(COL_ONE_SHOT) == 1
                         val specificTimeZone = cursor.getStringValue(COL_SPECIFIC_TIMEZONE)
+                        val challengeType = cursor.getIntValue(COL_CHALLENGE_TYPE)
+                        val challengePassword = cursor.getStringValue(COL_CHALLENGE_PASSWORD)
 
                         val alarm = Alarm(
                             id = id,
@@ -173,7 +187,9 @@ class DBHelper private constructor(
                             soundUri = soundUri,
                             label = label,
                             oneShot = oneShot,
-                            specificTimeZone = specificTimeZone
+                            specificTimeZone = specificTimeZone,
+                            challengeType = challengeType,
+                            challengePassword = challengePassword
                         )
                         alarms.add(alarm)
                     } catch (e: Exception) {

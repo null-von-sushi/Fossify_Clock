@@ -103,11 +103,39 @@
             android:textSize="@dimen/bigger_text_size"
             tools:text="TimeZone" />
 
+        <org.fossify.commons.views.MyTextView
+            android:id="@+id/edit_alarm_challenge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/edit_alarm_timezone"
+            android:background="?attr/selectableItemBackground"
+            android:drawableStart="@drawable/ic_label_vector"
+            android:drawablePadding="@dimen/normal_margin"
+            android:gravity="center_vertical"
+            android:padding="@dimen/activity_margin"
+            android:textSize="@dimen/bigger_text_size"
+            tools:text="Challenge" />
+
+        <org.fossify.commons.views.MyTextView
+            android:id="@+id/edit_alarm_challenge_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/edit_alarm_challenge"
+            android:background="?attr/selectableItemBackground"
+            android:drawableStart="@drawable/ic_label_vector"
+            android:drawablePadding="@dimen/normal_margin"
+            android:gravity="center_vertical"
+            android:padding="@dimen/activity_margin"
+            android:textSize="@dimen/bigger_text_size"
+            android:visibility="gone"
+            tools:text="Set password"
+            tools:visibility="visible" />
+
         <LinearLayout
             android:id="@+id/edit_alarm_label_holder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/edit_alarm_timezone"
+            android:layout_below="@+id/edit_alarm_challenge_password"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="@dimen/activity_margin"

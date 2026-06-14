@@ -16,24 +16,16 @@ import org.fossify.clock.extensions.alarmController
 import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.getFormattedTime
-import org.fossify.clock.helpers.ALARM_ID
-import org.fossify.clock.helpers.getPassedSeconds
+import org.fossify.clock.helpers.*
 import org.fossify.clock.models.Alarm
 import org.fossify.clock.models.AlarmEvent
-import org.fossify.commons.extensions.applyColorFilter
-import org.fossify.commons.extensions.getProperBackgroundColor
-import org.fossify.commons.extensions.getProperPrimaryColor
-import org.fossify.commons.extensions.getProperTextColor
-import org.fossify.commons.extensions.onGlobalLayout
-import org.fossify.commons.extensions.performHapticFeedback
-import org.fossify.commons.extensions.showPickSecondsDialog
-import org.fossify.commons.extensions.updateTextColors
-import org.fossify.commons.extensions.viewBinding
+import org.fossify.commons.extensions.*
 import org.fossify.commons.helpers.MINUTE_SECONDS
 import org.fossify.commons.helpers.isOreoMr1Plus
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import java.util.Random
 import kotlin.math.max
 import kotlin.math.min
 
@@ -202,6 +194,15 @@ class AlarmActivity : SimpleActivity() {
     }
 
     private fun dismissAlarmAndFinish(snoozeMinutes: Int = -1) {
+        if (snoozeMinutes == -1 && alarm?.challengeType != CHALLENGE_NONE) {
+            showChallengeDialog()
+            return
+        }
+
+        realDismissAlarm(snoozeMinutes)
+    }
+
+    private fun realDismissAlarm(snoozeMinutes: Int) {
         if (alarm != null) {
             if (snoozeMinutes != -1) {
                 alarmController.snoozeAlarm(alarm!!.id, snoozeMinutes)
@@ -212,6 +213,71 @@ class AlarmActivity : SimpleActivity() {
 
         finishActivity()
     }
+
+    private fun showChallengeDialog() {
+        val currentAlarm = alarm ?: return
+        when (currentAlarm.challengeType) {
+            CHALLENGE_MATH -> showMathChallenge()
+            CHALLENGE_PASSWORD -> showPasswordChallenge()
+        }
+    }
+
+    private fun showMathChallenge() {
+        val random = Random()
+        val num1 = random.nextInt(20) + 1
+        val num2 = random.nextInt(20) + 1
+        val result = num1 + num2
+        val mathProblem = "$num1 + $num2 = ?"
+
+        val editText = com.google.android.material.textfield.TextInputEditText(this)
+        editText.inputType = android.text.InputType.TYPE_CLASS_NUMBER
+
+        getAlertDialogBuilder()
+            .setPositiveButton(org.fossify.commons.R.string.ok, null)
+            .setNegativeButton(org.fossify.commons.R.string.cancel) { _, _ ->
+                didVibrate = false
+            }
+            .apply {
+                setTitle(mathProblem)
+                setupDialogStuff(editText, this) { alertDialog ->
+                    alertDialog.showKeyboard(editText)
+                    alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                        if (editText.value == result.toString()) {
+                            realDismissAlarm(-1)
+                            alertDialog.dismiss()
+                        } else {
+                            toast("Incorrect answer")
+                        }
+                    }
+                }
+            }
+    }
+
+    private fun showPasswordChallenge() {
+        val editText = com.google.android.material.textfield.TextInputEditText(this)
+        editText.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+
+        getAlertDialogBuilder()
+            .setPositiveButton(org.fossify.commons.R.string.ok, null)
+            .setNegativeButton(org.fossify.commons.R.string.cancel) { _, _ ->
+                didVibrate = false
+            }
+            .apply {
+                setTitle("Enter password")
+                setupDialogStuff(editText, this) { alertDialog ->
+                    alertDialog.showKeyboard(editText)
+                    alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                        if (editText.value == alarm?.challengePassword) {
+                            realDismissAlarm(-1)
+                            alertDialog.dismiss()
+                        } else {
+                            toast("Incorrect password")
+                        }
+                    }
+                }
+            }
+    }
+
 
     private fun showOverLockscreen() {
         window.addFlags(

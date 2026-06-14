@@ -42,6 +42,11 @@ const val DATA_EXPORT_EXTENSION = ".json"
 const val LAST_DATA_EXPORT_PATH = "last_alarms_export_path"
 const val MIGRATE_FIRST_DAY_OF_WEEK = "migrate_first_day_of_week"
 
+// challenge types
+const val CHALLENGE_NONE = 0
+const val CHALLENGE_MATH = 1
+const val CHALLENGE_PASSWORD = 2
+
 const val TABS_COUNT = 4
 const val EDITED_TIME_ZONE_SEPARATOR = ":"
 const val ALARM_ID = "alarm_id"

@@ -21,11 +21,15 @@ import org.fossify.clock.adapters.SelectTimeZonesAdapter
 import org.fossify.clock.databinding.DialogSelectTimeZonesBinding
 import org.fossify.clock.extensions.handleFullScreenNotificationsPermission
 import org.fossify.clock.extensions.rotateWeekdays
+import org.fossify.clock.helpers.CHALLENGE_MATH
+import org.fossify.clock.helpers.CHALLENGE_NONE
+import org.fossify.clock.helpers.CHALLENGE_PASSWORD
 import org.fossify.clock.helpers.PICK_AUDIO_FILE_INTENT_ID
 import org.fossify.clock.helpers.getCurrentDayMinutes
 import org.fossify.clock.helpers.updateNonRecurringAlarmDay
 import org.fossify.clock.models.Alarm
 import org.fossify.commons.dialogs.ConfirmationDialog
+import org.fossify.commons.dialogs.RadioGroupDialog
 import org.fossify.commons.dialogs.SelectAlarmSoundDialog
 import org.fossify.commons.extensions.addBit
 import org.fossify.commons.extensions.applyColorFilter
@@ -38,9 +42,11 @@ import org.fossify.commons.extensions.getTimePickerDialogTheme
 import org.fossify.commons.extensions.isDynamicTheme
 import org.fossify.commons.extensions.removeBit
 import org.fossify.commons.extensions.setupDialogStuff
+import org.fossify.commons.extensions.showKeyboard
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.value
 import org.fossify.commons.models.AlarmSound
+import org.fossify.commons.models.RadioItem
 
 class EditAlarmDialog(
     val activity: SimpleActivity,
@@ -153,6 +159,27 @@ class EditAlarmDialog(
                     .apply {
                         activity.setupDialogStuff(binding.root, this, R.string.time_zone)
                     }
+            }
+
+            editAlarmChallenge.colorCompoundDrawable(textColor)
+            updateChallengeText()
+            editAlarmChallenge.setOnClickListener {
+                val items = arrayListOf(
+                    RadioItem(CHALLENGE_NONE, activity.getString(R.string.alarm_challenge_none)),
+                    RadioItem(CHALLENGE_MATH, activity.getString(R.string.alarm_challenge_math)),
+                    RadioItem(CHALLENGE_PASSWORD, activity.getString(R.string.alarm_challenge_password))
+                )
+
+                RadioGroupDialog(activity, items, alarm.challengeType) {
+                    alarm.challengeType = it as Int
+                    updateChallengeText()
+                }
+            }
+
+            editAlarmChallengePassword.colorCompoundDrawable(textColor)
+            updateChallengePasswordText()
+            editAlarmChallengePassword.setOnClickListener {
+                showPasswordDialog()
             }
 
             val dayLetters = activity.resources.getStringArray(org.fossify.commons.R.array.week_day_letters)
@@ -309,5 +336,40 @@ class EditAlarmDialog(
             getAllTimeZones().firstOrNull { it.zoneName == alarm.specificTimeZone }?.title
                 ?: alarm.specificTimeZone
         }
+    }
+
+    private fun updateChallengeText() {
+        binding.editAlarmChallenge.text = when (alarm.challengeType) {
+            CHALLENGE_MATH -> activity.getString(R.string.alarm_challenge_math)
+            CHALLENGE_PASSWORD -> activity.getString(R.string.alarm_challenge_password)
+            else -> activity.getString(R.string.alarm_challenge_none)
+        }
+        binding.editAlarmChallengePassword.beVisibleIf(alarm.challengeType == CHALLENGE_PASSWORD)
+    }
+
+    private fun updateChallengePasswordText() {
+        binding.editAlarmChallengePassword.text = if (alarm.challengePassword.isEmpty()) {
+            "Set password"
+        } else {
+            "Password: ${alarm.challengePassword}"
+        }
+    }
+
+    private fun showPasswordDialog() {
+        val editText = com.google.android.material.textfield.TextInputEditText(activity)
+        editText.setText(alarm.challengePassword)
+        editText.hint = "Password"
+
+        activity.getAlertDialogBuilder()
+            .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
+                alarm.challengePassword = editText.value
+                updateChallengePasswordText()
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .apply {
+                activity.setupDialogStuff(editText, this, org.fossify.commons.R.string.label) { alertDialog ->
+                    alertDialog.showKeyboard(editText)
+                }
+            }
     }
 }
