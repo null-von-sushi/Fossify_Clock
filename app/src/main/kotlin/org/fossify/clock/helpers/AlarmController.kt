@@ -126,16 +126,20 @@ class AlarmController(
      * disabled or deleted via [disableOrDeleteOneTimeAlarm].
      *
      * @param alarmId The ID of the alarm to dismiss.
+     * @param isConfirmed If true, it means the challenge was passed or we are auto-dismissing.
      */
-    fun stopAlarm(alarmId: Int) {
-        sendIntentToService(AlarmService.ACTION_STOP_ALARM, alarmId)
-        bus.post(AlarmEvent.Stopped(alarmId))
-
+    fun stopAlarm(alarmId: Int, isConfirmed: Boolean = false) {
         ensureBackgroundThread {
-            val alarm = db.getAlarmWithId(alarmId)
+            val alarm = db.getAlarmWithId(alarmId) ?: return@ensureBackgroundThread
+            if (alarm.challengeType != CHALLENGE_NONE && !isConfirmed) {
+                return@ensureBackgroundThread
+            }
+
+            sendIntentToService(AlarmService.ACTION_STOP_ALARM, alarmId)
+            bus.post(AlarmEvent.Stopped(alarmId))
 
             // We don't reschedule alarms here.
-            if (alarm != null && !alarm.isRecurring()) {
+            if (!alarm.isRecurring()) {
                 context.cancelAlarmClock(alarm)
                 disableOrDeleteOneTimeAlarm(alarm)
             }
@@ -160,8 +164,7 @@ class AlarmController(
 
         ensureBackgroundThread {
             val alarm = db.getAlarmWithId(alarmId)
-            // TODO: This works but it is very rudimentary. Snoozed alarms are not being tracked.
-            if (alarm != null) {
+            if (alarm != null && alarm.challengeType == CHALLENGE_NONE) {
                 val triggerTimeMillis = Calendar.getInstance()
                     .apply { add(Calendar.MINUTE, snoozeMinutes) }
                     .timeInMillis

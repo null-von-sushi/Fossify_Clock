@@ -93,7 +93,7 @@ class AlarmService : Service() {
         if (replaceActiveAlarm) {
             stopPlayerAndCleanup()
             notificationHelper.postReplacedAlarmNotification(currentAlarm!!)
-            alarmController.stopAlarm(currentAlarm.id)
+            alarmController.stopAlarm(currentAlarm.id, true)
         }
 
         startAlarmEffects(newAlarm)
@@ -174,7 +174,7 @@ class AlarmService : Service() {
             val missedAlarm = activeAlarm
             if (missedAlarm?.id == alarmId) {
                 notificationHelper.postMissedAlarmNotification(missedAlarm)
-                alarmController.stopAlarm(alarmId)
+                alarmController.stopAlarm(alarmId, true)
             }
         }, durationSecs.seconds.inWholeMilliseconds)
     }

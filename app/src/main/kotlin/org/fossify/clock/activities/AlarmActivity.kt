@@ -68,11 +68,18 @@ class AlarmActivity : SimpleActivity() {
         )
 
         setupAlarmButtons()
+        if (alarm?.challengeType != CHALLENGE_NONE) {
+            binding.reminderSnooze.beGone()
+            binding.snoozeLabel.beGone()
+            binding.reminderDraggableBackground.beGone()
+            binding.reminderGuide.text = getString(R.string.swipe_to_dismiss)
+        }
         EventBus.getDefault().register(this)
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupAlarmButtons() {
+        val hasChallenge = alarm?.challengeType != CHALLENGE_NONE
         binding.reminderDraggableBackground.startAnimation(
             AnimationUtils.loadAnimation(this, R.anim.pulsing_animation)
         )
@@ -88,7 +95,7 @@ class AlarmActivity : SimpleActivity() {
         var initialDraggableX = 0f
 
         binding.reminderDismiss.onGlobalLayout {
-            minDragX = binding.reminderSnooze.left.toFloat()
+            minDragX = if (hasChallenge) binding.reminderDraggable.left.toFloat() else binding.reminderSnooze.left.toFloat()
             maxDragX = binding.reminderDismiss.left.toFloat()
             initialDraggableX = binding.reminderDraggable.left.toFloat()
         }
@@ -97,17 +104,15 @@ class AlarmActivity : SimpleActivity() {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     dragDownX = event.x
-                    binding.reminderDraggableBackground.animate().alpha(0f)
+                    if (!hasChallenge) {
+                        binding.reminderDraggableBackground.animate().alpha(0f)
+                    }
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     dragDownX = 0f
                     if (!didVibrate) {
-                        binding.reminderDraggable.animate().x(initialDraggableX).withEndAction {
-                            binding.reminderDraggableBackground
-                                .animate()
-                                .alpha(REMINDER_DRAGGABLE_BACKGROUND_ALPHA)
-                        }
+                        resetDraggable(initialDraggableX)
 
                         binding.reminderGuide.animate().alpha(1f).start()
                         swipeGuideFadeHandler.removeCallbacksAndMessages(null)
@@ -129,7 +134,7 @@ class AlarmActivity : SimpleActivity() {
                             didVibrate = true
                             dismissAlarmAndFinish()
                         }
-                    } else if (binding.reminderDraggable.x <= minDragX + DRAG_ACTION_THRESHOLD_PX) {
+                    } else if (!hasChallenge && binding.reminderDraggable.x <= minDragX + DRAG_ACTION_THRESHOLD_PX) {
                         if (!didVibrate) {
                             binding.reminderDraggable.performHapticFeedback()
                             didVibrate = true
@@ -139,6 +144,16 @@ class AlarmActivity : SimpleActivity() {
                 }
             }
             true
+        }
+    }
+
+    private fun resetDraggable(initialDraggableX: Float) {
+        binding.reminderDraggable.animate().x(initialDraggableX).withEndAction {
+            if (alarm?.challengeType == CHALLENGE_NONE) {
+                binding.reminderDraggableBackground
+                    .animate()
+                    .alpha(REMINDER_DRAGGABLE_BACKGROUND_ALPHA)
+            }
         }
     }
 
@@ -173,6 +188,10 @@ class AlarmActivity : SimpleActivity() {
     }
 
     private fun snoozeAlarm(overrideSnoozeDuration: Int? = null) {
+        if (alarm?.challengeType != CHALLENGE_NONE) {
+            return
+        }
+
         if (overrideSnoozeDuration != null) {
             dismissAlarmAndFinish(overrideSnoozeDuration)
         } else if (config.useSameSnooze) {
@@ -207,7 +226,7 @@ class AlarmActivity : SimpleActivity() {
             if (snoozeMinutes != -1) {
                 alarmController.snoozeAlarm(alarm!!.id, snoozeMinutes)
             } else {
-                alarmController.stopAlarm(alarm!!.id)
+                alarmController.stopAlarm(alarm!!.id, true)
             }
         }
 
@@ -235,7 +254,7 @@ class AlarmActivity : SimpleActivity() {
         getAlertDialogBuilder()
             .setPositiveButton(org.fossify.commons.R.string.ok, null)
             .setNegativeButton(org.fossify.commons.R.string.cancel) { _, _ ->
-                didVibrate = false
+                cancelChallenge()
             }
             .apply {
                 setTitle(mathProblem)
@@ -255,12 +274,12 @@ class AlarmActivity : SimpleActivity() {
 
     private fun showPasswordChallenge() {
         val editText = com.google.android.material.textfield.TextInputEditText(this)
-        editText.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+        editText.inputType = android.text.InputType.TYPE_CLASS_TEXT
 
         getAlertDialogBuilder()
             .setPositiveButton(org.fossify.commons.R.string.ok, null)
             .setNegativeButton(org.fossify.commons.R.string.cancel) { _, _ ->
-                didVibrate = false
+                cancelChallenge()
             }
             .apply {
                 setTitle("Enter password")
@@ -276,6 +295,14 @@ class AlarmActivity : SimpleActivity() {
                     }
                 }
             }
+    }
+
+    private fun cancelChallenge() {
+        didVibrate = false
+        binding.reminderDismiss.onGlobalLayout {
+            val initialDraggableX = binding.reminderDraggable.left.toFloat()
+            resetDraggable(initialDraggableX)
+        }
     }
 
 

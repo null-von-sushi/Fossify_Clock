@@ -16,6 +16,7 @@
     <string name="clock_and_date">Clock and date</string>
     <string name="use_text_shadow">Use text shadow</string>
     <string name="swipe_right_to_dismiss">Swipe right to Dismiss, or left to Snooze.</string>
+    <string name="swipe_to_dismiss">Swipe right to Dismiss.</string>
     <string name="sort_by_creation_order">Creation order</string>
     <string name="sort_by_alarm_time">Alarm time</string>
     <string name="sort_by_timer_duration">Timer duration</string>

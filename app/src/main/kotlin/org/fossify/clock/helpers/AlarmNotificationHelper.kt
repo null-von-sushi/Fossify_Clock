@@ -62,7 +62,7 @@ class AlarmNotificationHelper(private val context: Context) {
         val dismissIntent = context.getStopAlarmPendingIntent(alarm)
         val snoozeIntent = context.getSnoozePendingIntent(alarm)
 
-        return NotificationCompat.Builder(context, channelId)
+        val builder = NotificationCompat.Builder(context, channelId)
             .setContentTitle(contentTitle)
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_alarm_vector)
@@ -70,16 +70,22 @@ class AlarmNotificationHelper(private val context: Context) {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setDefaults(NotificationCompat.DEFAULT_LIGHTS)
-            .addAction(
+
+        if (alarm.challengeType == CHALLENGE_NONE) {
+            builder.addAction(
                 org.fossify.commons.R.drawable.ic_snooze_vector,
                 context.getString(org.fossify.commons.R.string.snooze),
                 snoozeIntent
             )
-            .addAction(
+
+            builder.addAction(
                 org.fossify.commons.R.drawable.ic_cross_vector,
                 context.getString(org.fossify.commons.R.string.dismiss),
                 dismissIntent
             )
+        }
+
+        return builder
             .setDeleteIntent(dismissIntent)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setFullScreenIntent(pendingIntent, true)
