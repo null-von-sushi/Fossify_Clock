@@ -396,18 +396,28 @@ fun Context.getClosestEnabledAlarmString(callback: (result: String) -> Unit) {
             return@getEnabledAlarms
         }
 
-        val dayOfWeekIndex = (closestAlarmTime.get(Calendar.DAY_OF_WEEK) + 5) % 7
-        val dayOfWeek =
-            resources.getStringArray(org.fossify.commons.R.array.week_days_short)[dayOfWeekIndex]
         val pattern = if (config.use24HourFormat) {
             FORMAT_24H
         } else {
             FORMAT_12H
         }
 
+        val dayOfWeekIndex = (closestAlarmTime.get(Calendar.DAY_OF_WEEK) + 5) % 7
+        val dayOfWeek =
+            resources.getStringArray(org.fossify.commons.R.array.week_days_short)[dayOfWeekIndex]
+
         val formattedTime =
-            SimpleDateFormat(pattern, Locale.getDefault()).format(closestAlarmTime.time)
-        callback("$dayOfWeek $formattedTime")
+            SimpleDateFormat(pattern, Locale.getDefault()).apply {
+                timeZone = closestAlarmTime.timeZone
+            }.format(closestAlarmTime.time)
+
+        val timeZoneSuffix = if (closestAlarmTime.timeZone.id != java.util.TimeZone.getDefault().id) {
+            " (${closestAlarmTime.timeZone.id})"
+        } else {
+            ""
+        }
+
+        callback("$dayOfWeek $formattedTime$timeZoneSuffix")
     }
 }
 

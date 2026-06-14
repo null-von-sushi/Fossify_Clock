@@ -274,11 +274,16 @@ fun getAllTimeZones() = arrayListOf(
 )
 
 fun getTimeOfNextAlarm(alarm: Alarm): Calendar? {
-    return getTimeOfNextAlarm(alarm.timeInMinutes, alarm.days)
+    val timeZone = if (alarm.specificTimeZone.isNotEmpty()) {
+        TimeZone.getTimeZone(alarm.specificTimeZone)
+    } else {
+        TimeZone.getDefault()
+    }
+    return getTimeOfNextAlarm(alarm.timeInMinutes, alarm.days, timeZone)
 }
 
-fun getTimeOfNextAlarm(alarmTimeInMinutes: Int, days: Int): Calendar? {
-    val nextAlarmTime = Calendar.getInstance().apply {
+fun getTimeOfNextAlarm(alarmTimeInMinutes: Int, days: Int, timeZone: TimeZone = TimeZone.getDefault()): Calendar? {
+    val nextAlarmTime = Calendar.getInstance(timeZone).apply {
         set(Calendar.HOUR_OF_DAY, alarmTimeInMinutes / 60)
         set(Calendar.MINUTE, alarmTimeInMinutes % 60)
         set(Calendar.SECOND, 0)
@@ -289,7 +294,7 @@ fun getTimeOfNextAlarm(alarmTimeInMinutes: Int, days: Int): Calendar? {
         TODAY_BIT -> nextAlarmTime // do nothing, alarm is today
         TOMORROW_BIT -> nextAlarmTime.apply { add(Calendar.DAY_OF_MONTH, 1) }
         else -> {
-            val now = Calendar.getInstance()
+            val now = Calendar.getInstance(timeZone)
             repeat(8) {
                 val currentDay = getDayNumber(nextAlarmTime.get(Calendar.DAY_OF_WEEK))
                 if (days.isBitSet(currentDay) && now < nextAlarmTime) {

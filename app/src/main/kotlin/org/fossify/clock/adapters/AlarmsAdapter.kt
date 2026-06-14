@@ -14,6 +14,7 @@ import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.getFormattedTime
 import org.fossify.clock.extensions.getSelectedDaysString
+import org.fossify.clock.helpers.getAllTimeZones
 import org.fossify.clock.helpers.updateNonRecurringAlarmDay
 import org.fossify.clock.interfaces.ToggleAlarmInterface
 import org.fossify.clock.models.Alarm
@@ -109,7 +110,7 @@ class AlarmsAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     fun updateItems(newItems: ArrayList<Alarm>) {
-        alarms = newItems
+        alarms = newItems.toCollection(ArrayList())
         notifyDataSetChanged()
         finishActMode()
     }
@@ -157,6 +158,13 @@ class AlarmsAdapter(
             alarmLabel.text = alarm.label
             alarmLabel.setTextColor(textColor)
             alarmLabel.beVisibleIf(alarm.label.isNotEmpty())
+
+            alarmTimezone.beVisibleIf(alarm.specificTimeZone.isNotEmpty())
+            if (alarm.specificTimeZone.isNotEmpty()) {
+                alarmTimezone.text = getAllTimeZones().firstOrNull { it.zoneName == alarm.specificTimeZone }?.title
+                    ?: alarm.specificTimeZone
+                alarmTimezone.setTextColor(textColor)
+            }
 
             alarmSwitch.isChecked = alarm.isEnabled
             alarmSwitch.setColors(textColor, properPrimaryColor, backgroundColor)

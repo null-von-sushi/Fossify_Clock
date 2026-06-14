@@ -11,7 +11,11 @@ import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 
-class SelectTimeZonesAdapter(val activity: SimpleActivity, val timeZones: ArrayList<MyTimeZone>) : RecyclerView.Adapter<SelectTimeZonesAdapter.ViewHolder>() {
+class SelectTimeZonesAdapter(
+    val activity: SimpleActivity,
+    val timeZones: ArrayList<MyTimeZone>,
+    val isSingleSelection: Boolean = false,
+) : RecyclerView.Adapter<SelectTimeZonesAdapter.ViewHolder>() {
     private val config = activity.config
     private val textColor = activity.getProperTextColor()
     private val backgroundColor = activity.getProperBackgroundColor()
@@ -19,10 +23,12 @@ class SelectTimeZonesAdapter(val activity: SimpleActivity, val timeZones: ArrayL
     var selectedKeys = HashSet<Int>()
 
     init {
-        val selectedTimeZones = config.selectedTimeZones
-        timeZones.forEachIndexed { index, myTimeZone ->
-            if (selectedTimeZones.contains(myTimeZone.id.toString())) {
-                selectedKeys.add(myTimeZone.id)
+        if (!isSingleSelection) {
+            val selectedTimeZones = config.selectedTimeZones
+            timeZones.forEachIndexed { index, myTimeZone ->
+                if (selectedTimeZones.contains(myTimeZone.id.toString())) {
+                    selectedKeys.add(myTimeZone.id)
+                }
             }
         }
     }
@@ -30,13 +36,20 @@ class SelectTimeZonesAdapter(val activity: SimpleActivity, val timeZones: ArrayL
     private fun toggleItemSelection(select: Boolean, pos: Int) {
         val itemKey = timeZones.getOrNull(pos)?.id ?: return
 
-        if (select) {
-            selectedKeys.add(itemKey)
+        if (isSingleSelection) {
+            selectedKeys.clear()
+            if (select) {
+                selectedKeys.add(itemKey)
+            }
+            notifyDataSetChanged()
         } else {
-            selectedKeys.remove(itemKey)
+            if (select) {
+                selectedKeys.add(itemKey)
+            } else {
+                selectedKeys.remove(itemKey)
+            }
+            notifyItemChanged(pos)
         }
-
-        notifyItemChanged(pos)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

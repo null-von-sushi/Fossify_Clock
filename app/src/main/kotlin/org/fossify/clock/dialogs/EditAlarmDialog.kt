@@ -16,6 +16,9 @@ import org.fossify.clock.extensions.colorCompoundDrawable
 import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.getFormattedTime
+import org.fossify.clock.helpers.getAllTimeZones
+import org.fossify.clock.adapters.SelectTimeZonesAdapter
+import org.fossify.clock.databinding.DialogSelectTimeZonesBinding
 import org.fossify.clock.extensions.handleFullScreenNotificationsPermission
 import org.fossify.clock.extensions.rotateWeekdays
 import org.fossify.clock.helpers.PICK_AUDIO_FILE_INTENT_ID
@@ -119,6 +122,38 @@ class EditAlarmDialog(
 
             editAlarmLabelImage.applyColorFilter(textColor)
             editAlarm.setText(alarm.label)
+
+            editAlarmTimezone.colorCompoundDrawable(textColor)
+            updateTimeZoneText()
+            editAlarmTimezone.setOnClickListener {
+                val timeZones = getAllTimeZones()
+                val binding = DialogSelectTimeZonesBinding.inflate(activity.layoutInflater)
+                val adapter = SelectTimeZonesAdapter(activity, timeZones, true)
+                val currentZone = timeZones.firstOrNull { it.zoneName == alarm.specificTimeZone }
+                if (currentZone != null) {
+                    adapter.selectedKeys.add(currentZone.id)
+                }
+                binding.selectTimeZonesList.adapter = adapter
+
+                activity.getAlertDialogBuilder()
+                    .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
+                        val selectedId = adapter.selectedKeys.firstOrNull()
+                        alarm.specificTimeZone = if (selectedId != null) {
+                            timeZones.firstOrNull { it.id == selectedId }?.zoneName ?: ""
+                        } else {
+                            ""
+                        }
+                        updateTimeZoneText()
+                    }
+                    .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+                    .setNeutralButton(org.fossify.commons.R.string.none) { _, _ ->
+                        alarm.specificTimeZone = ""
+                        updateTimeZoneText()
+                    }
+                    .apply {
+                        activity.setupDialogStuff(binding.root, this, R.string.time_zone)
+                    }
+            }
 
             val dayLetters = activity.resources.getStringArray(org.fossify.commons.R.array.week_day_letters)
             val dayIndexes = activity.rotateWeekdays(arrayListOf(0, 1, 2, 3, 4, 5, 6))
@@ -265,5 +300,14 @@ class EditAlarmDialog(
         alarm.soundTitle = alarmSound.title
         alarm.soundUri = alarmSound.uri
         binding.editAlarmSound.text = alarmSound.title
+    }
+
+    private fun updateTimeZoneText() {
+        binding.editAlarmTimezone.text = if (alarm.specificTimeZone.isEmpty()) {
+            activity.getString(R.string.time_zone)
+        } else {
+            getAllTimeZones().firstOrNull { it.zoneName == alarm.specificTimeZone }?.title
+                ?: alarm.specificTimeZone
+        }
     }
 }

@@ -194,11 +194,12 @@ class AlarmController(
     }
 
     private fun scheduleNextAlarm(alarm: Alarm, showToast: Boolean = false) {
-        val triggerTimeMillis = getTimeOfNextAlarm(alarm)?.timeInMillis ?: return
+        val nextAlarm = getTimeOfNextAlarm(alarm)
+        val triggerTimeMillis = nextAlarm?.timeInMillis ?: return
         context.setupAlarmClock(alarm = alarm, triggerTimeMillis = triggerTimeMillis)
 
         if (showToast) {
-            val now = Calendar.getInstance()
+            val now = Calendar.getInstance(nextAlarm.timeZone)
             val triggerInMillis = triggerTimeMillis - now.timeInMillis
             context.showRemainingTimeMessage(triggerInMillis)
         }
