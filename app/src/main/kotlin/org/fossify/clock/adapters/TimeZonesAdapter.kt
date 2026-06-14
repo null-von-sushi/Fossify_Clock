@@ -97,7 +97,7 @@ class TimeZonesAdapter(activity: SimpleActivity, var timeZones: ArrayList<MyTime
         activity.config.selectedTimeZones = newTimeZones
     }
 
-    private fun getSelectedItems() = timeZones.filter { selectedKeys.contains(it.id) } as ArrayList<MyTimeZone>
+    private fun getSelectedItems() = timeZones.filter { selectedKeys.contains(it.id) }.toCollection(ArrayList())
 
     private fun setupView(view: View, timeZone: MyTimeZone) {
         val currTimeZone = TimeZone.getTimeZone(timeZone.zoneName)

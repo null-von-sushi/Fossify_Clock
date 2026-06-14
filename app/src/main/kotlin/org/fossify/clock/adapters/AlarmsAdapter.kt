@@ -13,6 +13,7 @@ import org.fossify.clock.databinding.ItemAlarmBinding
 import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.getFormattedTime
+import org.fossify.clock.extensions.getSelectedDaysString
 import org.fossify.clock.helpers.updateNonRecurringAlarmDay
 import org.fossify.clock.interfaces.ToggleAlarmInterface
 import org.fossify.clock.models.Alarm
@@ -21,7 +22,6 @@ import org.fossify.commons.adapters.MyRecyclerViewAdapter
 import org.fossify.commons.dialogs.ConfirmationDialog
 import org.fossify.commons.extensions.applyColorFilter
 import org.fossify.commons.extensions.beVisibleIf
-import org.fossify.commons.extensions.getSelectedDaysString
 import org.fossify.commons.extensions.move
 import org.fossify.commons.helpers.EVERY_DAY_BIT
 import org.fossify.commons.helpers.SORT_BY_CUSTOM
@@ -128,7 +128,7 @@ class AlarmsAdapter(
     }
 
     private fun getSelectedItems(): ArrayList<Alarm> {
-        return alarms.filter { selectedKeys.contains(it.id) } as ArrayList<Alarm>
+        return alarms.filter { selectedKeys.contains(it.id) }.toCollection(ArrayList())
     }
 
     @SuppressLint("ClickableViewAccessibility")

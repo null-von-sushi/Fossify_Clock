@@ -585,3 +585,16 @@ fun Context.firstDayOrder(bitMask: Int): Int {
 
     return bitMask
 }
+
+fun Context.getSelectedDaysString(bitmask: Int): String {
+    val dayBits = intArrayOf(MONDAY_BIT, TUESDAY_BIT, WEDNESDAY_BIT, THURSDAY_BIT, FRIDAY_BIT, SATURDAY_BIT, SUNDAY_BIT)
+    val weekDays = resources.getStringArray(org.fossify.commons.R.array.week_days_short)
+    val selectedDays = mutableListOf<String>()
+
+    dayBits.forEachIndexed { index, bit ->
+        if (bitmask and bit != 0) {
+            selectedDays.add(weekDays[index])
+        }
+    }
+    return selectedDays.joinToString(", ")
+}
